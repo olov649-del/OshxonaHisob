@@ -1,0 +1,45 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Find Android project
+        run: |
+          mkdir project
+          unzip -q *.zip -d project
+          find project -name settings.gradle -exec dirname {} \; | head -1 > project_dir.txt
+          cat project_dir.txt
+
+      - name: Build APK
+        run: |
+          PROJECT_DIR=$(cat project_dir.txt)
+          cd "$PROJECT_DIR"
+          gradle assembleDebug --no-daemon
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: OshxonaHisob-APK
+          path: '**/build/outputs/apk/debug/*.apk'
