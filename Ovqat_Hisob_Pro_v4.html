@@ -1,0 +1,57 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ovqat Hisob Pro</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f2f3f5;color:#111}header{background:#111;color:#fff;padding:17px;font-size:22px;font-weight:700}nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:#fff;position:sticky;top:0;z-index:5}nav button{border:0;border-radius:10px;padding:12px 4px;background:#eee;font-size:13px}.active{background:#111!important;color:#fff}.page{display:none}.show{display:block}main{max-width:720px;margin:auto;padding:10px}.card{background:#fff;border-radius:14px;padding:15px;margin-bottom:10px}h2{margin-top:0}input,select{width:100%;padding:13px;margin:5px 0 10px;border:1px solid #ddd;border-radius:9px;font-size:16px;box-sizing:border-box}.btn{width:100%;padding:14px;border:0;border-radius:10px;background:#111;color:#fff;font-size:16px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#fff;padding:14px;border-radius:12px}.big{font-size:19px;font-weight:bold;margin-top:5px}.item{padding:12px 0;border-bottom:1px solid #eee;display:flex;justify-content:space-between;gap:8px}.small{color:#777;font-size:13px}.money{font-weight:bold}.danger{background:#eee;border:0;border-radius:8px;padding:7px}.hint{background:#f7f7f7;padding:10px;border-radius:9px;font-size:13px;color:#555}
+</style></head><body>
+<header>🍽 Ovqat Hisob Pro</header>
+<nav><button class=active onclick="openPage('home',this)">🏠 Bosh</button><button onclick="openPage('products',this)">🧺 Mahsulot</button><button onclick="openPage('foods',this)">🍲 Ovqat</button><button onclick="openPage('sales',this)">💰 Sotuv</button><button onclick="openPage('workers',this)">👷 Ishchi</button><button onclick="openPage('expenses',this)">💸 Xarajat</button><button onclick="openPage('reports',this)">📊 Hisobot</button><button onclick=backup()>💾 Zaxira</button></nav>
+<main>
+<section id=home class="page show"><div class=grid><div class=stat>💰 Bugungi savdo<div id=tSales class=big>0 so‘m</div></div><div class=stat>📈 Bugungi foyda<div id=tProfit class=big>0 so‘m</div></div><div class=stat>👷 Bugungi ish haqi<div id=tSalary class=big>0 so‘m</div></div><div class=stat>💸 Bugungi xarajat<div id=tExp class=big>0 so‘m</div></div></div><div class=card><h3>⚡ Tezkor sotuv</h3><div id=quick></div></div></section>
+
+<section id=products class=page><div class=card><h2>🧺 Mahsulot</h2><input id=pn placeholder="Mahsulot nomi"><div class=grid><input id=pq type=number step=.001 placeholder="Miqdori"><select id=pu><option>kg</option><option>litr</option><option>dona</option><option>gramm</option></select></div><input id=pp type=number placeholder="1 birlik narxi (so‘m)"><button class=btn onclick=addProduct()>➕ Saqlash</button></div><div class=card id=plist></div></section>
+
+<section id=foods class=page><div class=card><h2>🍲 Ovqat</h2><input id=fn placeholder="Ovqat nomi"><input id=fp type=number placeholder="Sotuv narxi (so‘m)"><h3>Retsept</h3><div id=ings></div><button class=btn onclick=addIng()>➕ Mahsulot qo‘shish</button><p><b>Tannarx:</b> <span id=cost>0 so‘m</span></p><button class=btn onclick=addFood()>💾 Ovqatni saqlash</button></div><div class=card id=flist></div></section>
+
+<section id=sales class=page><div class=card><h2>💰 Sotuv</h2><select id=sf></select><input id=sq type=number value=1 min=1 placeholder="Porsiya soni"><button class=btn onclick=addSale()>💾 Sotuvni saqlash</button></div><div class=card id=slist></div></section>
+
+<section id=workers class=page><div class=card><h2>👷 Ishchi</h2><div class=hint>Bu yerda oylik summa emas, <b>ovqat savdosidan foiz</b> belgilanadi. Foizni o‘zingiz tanlaysiz.</div><input id=wn placeholder="Ishchi ismi"><input id=wrate type=number step=.1 min=0 max=100 placeholder="Savdodan foiz (%)"><button class=btn onclick=addWorker()>➕ Ishchini saqlash</button></div><div class=card><h3>👷 Ishchilar</h3><div id=wlist></div></div><div class=card><h3>📅 Ish haqi</h3><div id=wreport></div></div></section>
+
+<section id=expenses class=page><div class=card><h2>💸 Xarajat</h2><input id=en placeholder="Xarajat nomi"><input id=ea type=number placeholder="Summa"><button class=btn onclick=addExpense()>💾 Saqlash</button></div><div class=card id=elist></div></section>
+
+<section id=reports class=page><div class=card><h2>📊 Hisobot</h2><div id=report></div></div><div class=card><button class=btn onclick=clearAll()>🗑 Barcha ma’lumotni tozalash</button></div></section>
+</main>
+<script>
+let d=JSON.parse(localStorage.getItem('ovqatPro4')||'{"products":[],"foods":[],"sales":[],"workers":[],"expenses":[]}'),ings=[];
+const money=n=>(Math.round(n||0)).toLocaleString('uz-UZ')+' so‘m';
+const P=id=>d.products.find(x=>x.id==id), F=id=>d.foods.find(x=>x.id==id), W=id=>d.workers.find(x=>x.id==id);
+const today=x=>new Date(x).toDateString()==new Date().toDateString();
+function save(){localStorage.setItem('ovqatPro4',JSON.stringify(d));render()}
+function openPage(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('show'));document.getElementById(id).classList.add('show');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()}
+function addProduct(){let n=pn.value.trim(),q=+pq.value,p=+pp.value;if(!n||q<=0||p<=0)return alert('Ma’lumotlarni to‘liq kiriting');d.products.push({id:Date.now(),n,q,p,u:pu.value});pn.value=pq.value=pp.value='';save()}
+function addIng(){if(!d.products.length)return alert('Avval mahsulot qo‘shing');let x=document.createElement('div');x.className='grid';x.innerHTML='<select>'+d.products.map(p=>`<option value="${p.id}">${p.n} (${money(p.p)}/${p.u})</option>`).join('')+'</select><input type=number step=.001 min=0 placeholder="Retseptdagi miqdor">';ings.push(x);document.getElementById('ings').appendChild(x);calc()}
+function calc(){let c=0;ings.forEach(x=>c+=(+x.querySelector('input').value||0)*(P(x.querySelector('select').value)?.p||0));cost.textContent=money(c)}
+document.addEventListener('input',e=>{if(e.target.closest('#ings'))calc()});
+function addFood(){let n=fn.value.trim(),sp=+fp.value,c=0,a=[];ings.forEach(x=>{let id=+x.querySelector('select').value,q=+x.querySelector('input').value||0;c+=q*(P(id)?.p||0);a.push({id,q})});if(!n||sp<=0||!a.length)return alert('Ovqat va retseptni kiriting');d.foods.push({id:Date.now(),n,sp,c,ings:a});fn.value=fp.value='';ings=[];document.getElementById('ings').innerHTML='';save()}
+function addSale(){let f=F(sf.value),q=+sq.value;if(!f||q<=0)return alert('Ovqat va porsiyani kiriting');d.sales.push({id:Date.now(),food:f.id,q,date:new Date().toISOString()});save()}
+function addWorker(){let n=wn.value.trim(),r=+wrate.value;if(!n||r<0||r>100)return alert('Ishchi ismi va 0–100% foizni kiriting');d.workers.push({id:Date.now(),n,r});wn.value=wrate.value='';save()}
+function addExpense(){let n=en.value.trim(),a=+ea.value;if(!n||a<=0)return alert('Xarajatni kiriting');d.expenses.push({id:Date.now(),n,a,date:new Date().toISOString()});en.value=ea.value='';save()}
+function del(t,id){d[t]=d[t].filter(x=>x.id!=id);save()}
+function workerPay(w,start){return d.sales.filter(x=>(!start||x.date>=start)).reduce((a,x)=>a+x.q*(F(x.food)?.sp||0)*w.r/100,0)}
+function render(){
+let salesToday=d.sales.filter(x=>today(x.date)),ts=salesToday.reduce((a,x)=>a+x.q*(F(x.food)?.sp||0),0),tc=salesToday.reduce((a,x)=>a+x.q*(F(x.food)?.c||0),0),ex=d.expenses.filter(x=>today(x.date)).reduce((a,x)=>a+x.a,0),sal=d.workers.reduce((a,w)=>a+workerPay(w,new Date().toDateString()),0);
+tSales.textContent=money(ts);tSalary.textContent=money(sal);tExp.textContent=money(ex);tProfit.textContent=money(ts-tc-ex-sal);
+plist.innerHTML='<h3>Mahsulotlar</h3>'+d.products.map(x=>`<div class=item><span><b>${x.n}</b><br><span class=small>${x.q} ${x.u} × ${money(x.p)}</span></span><button class=danger onclick="del('products',${x.id})">🗑</button></div>`).join('')||'Mahsulot yo‘q';
+flist.innerHTML='<h3>Ovqatlar</h3>'+d.foods.map(x=>`<div class=item><span><b>${x.n}</b><br><span class=small>Tannarx ${money(x.c)} · Sotuv ${money(x.sp)} · Foyda ${money(x.sp-x.c)}</span></span><button class=danger onclick="del('foods',${x.id})">🗑</button></div>`).join('')||'Ovqat yo‘q';
+sf.innerHTML=d.foods.map(x=>`<option value=${x.id}>${x.n} — ${money(x.sp)}</option>`).join('')||'<option>Ovqat yo‘q</option>';
+quick.innerHTML=d.foods.map(x=>`<button class=btn style="width:auto;margin:3px" onclick="quickSale(${x.id})">${x.n}</button>`).join('')||'Avval ovqat qo‘shing';
+slist.innerHTML='<h3>Oxirgi sotuvlar</h3>'+[...d.sales].reverse().slice(0,20).map(x=>`<div class=item>${F(x.food)?.n||'Noma’lum'} × ${x.q}<b>${money(x.q*(F(x.food)?.sp||0))}</b></div>`).join('')||'Sotuv yo‘q';
+wlist.innerHTML=d.workers.map(w=>`<div class=item><span><b>${w.n}</b><br><span class=small>Har bir savdodan ${w.r}%</span></span><span><b>${money(workerPay(w))}</b><br><button class=danger onclick="del('workers',${w.id})">🗑</button></span></div>`).join('')||'Ishchi yo‘q';
+wreport.innerHTML=d.workers.map(w=>`<p><b>${w.n}</b>: bugun ${money(workerPay(w,new Date().toDateString()))}</p>`).join('')||'Ishchi qo‘shing';
+elist.innerHTML=d.expenses.map(x=>`<div class=item>${x.n}<b>${money(x.a)}</b></div>`).join('')||'Xarajat yo‘q';
+let A=d.sales.reduce((a,x)=>a+x.q*(F(x.food)?.sp||0),0),C=d.sales.reduce((a,x)=>a+x.q*(F(x.food)?.c||0),0),E=d.expenses.reduce((a,x)=>a+x.a,0),S=d.workers.reduce((a,w)=>a+workerPay(w),0);
+report.innerHTML=`<p>💰 Jami savdo: <b>${money(A)}</b></p><p>🧮 Tannarx: <b>${money(C)}</b></p><p>💸 Xarajat: <b>${money(E)}</b></p><p>👷 Ishchilar foizi: <b>${money(S)}</b></p><hr><p class=money>📈 Toza foyda: ${money(A-C-E-S)}</p><p class=small>Misol: 10% ishchi foizi bo‘lsa, jami savdoning 10% avtomatik ish haqiga hisoblanadi.</p>`;
+}
+function quickSale(id){d.sales.push({id:Date.now(),food:id,q:1,date:new Date().toISOString()});save()}
+function backup(){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d)],{type:'application/json'}));a.download='ovqat-hisob-zaxira.json';a.click()}
+function clearAll(){if(confirm('Barcha ma’lumotlar o‘chadi. Davom etasizmi?')){d={products:[],foods:[],sales:[],workers:[],expenses:[]};save()}}
+render();
+</script></body></html>
